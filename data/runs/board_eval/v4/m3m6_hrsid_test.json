@@ -1,0 +1,35 @@
+{
+  "dataset": "hrsid/test",
+  "n_patches": 7848,
+  "gt_dist": {
+    "empty": 1379,
+    "simple": 1808,
+    "complex": 4661
+  },
+  "gate_acc": 0.8396,
+  "confusion": [
+    [
+      1278,
+      16,
+      85
+    ],
+    [
+      62,
+      1075,
+      671
+    ],
+    [
+      168,
+      257,
+      4236
+    ]
+  ],
+  "true_skips": 1278,
+  "false_skips": 230,
+  "latency_ms": {
+    "prep": 3.146,
+    "gate": 0.612,
+    "det": 11.663,
+    "full_pipe": 15.421
+  }
+}

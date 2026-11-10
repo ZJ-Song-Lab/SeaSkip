@@ -1,0 +1,46 @@
+{
+  "parity_check": {
+    "v4_3class_pc_vs_board_diffs": 2,
+    "note": "0 diffs 则 PC 推理协议与板端逐位一致"
+  },
+  "three_class_v4": {
+    "argmax": {
+      "skip_rate": 0.19215086646279306,
+      "true_skips": 1278,
+      "false_skips": 230,
+      "gt_ships_on_false_skips": 521,
+      "empty_recall": 0.9267585206671501,
+      "fs_min_side_median": 13.999999999999972,
+      "fs_min_side_lt32_frac": 0.8272552783109405
+    },
+    "tau06": {
+      "skip_rate": 0.175203873598369,
+      "true_skips": 1229,
+      "false_skips": 146,
+      "gt_ships_on_false_skips": 230,
+      "empty_recall": 0.8912255257432923,
+      "fs_min_side_median": 16.0,
+      "fs_min_side_lt32_frac": 0.8260869565217391
+    }
+  },
+  "binary_v4bin": {
+    "argmax": {
+      "skip_rate": 0.18081039755351683,
+      "true_skips": 1245,
+      "false_skips": 174,
+      "gt_ships_on_false_skips": 334,
+      "empty_recall": 0.9028281363306744,
+      "fs_min_side_median": 17.49999999999997,
+      "fs_min_side_lt32_frac": 0.7784431137724551
+    },
+    "tau06": {
+      "skip_rate": 0.1699796126401631,
+      "true_skips": 1209,
+      "false_skips": 125,
+      "gt_ships_on_false_skips": 200,
+      "empty_recall": 0.8767222625090645,
+      "fs_min_side_median": 17.0,
+      "fs_min_side_lt32_frac": 0.795
+    }
+  }
+}

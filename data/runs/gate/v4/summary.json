@@ -1,0 +1,53 @@
+{
+  "purpose": "v2 轻量 gate: 延迟 1-2ms, 盈亏平衡跳过率降至 ~10%",
+  "arch": "stem Conv3-32 k7 s4 + 4x[DW k3 s2 + PW] (32-64-128-256-512) + GAP + Linear512-3, raw logits",
+  "params": 187587,
+  "epochs": 20,
+  "batch": 24,
+  "lr": 0.0003,
+  "wd": 0.01,
+  "label_smoothing": 0.05,
+  "augment": "hflip/vflip",
+  "preprocess": "RGB/255, resize 160 (与 seaskip_eval.cpp 逐位一致)",
+  "best_val_top1": 0.8428745432399513,
+  "best_val_metrics": {
+    "top1": 0.8428745432399513,
+    "loss": 0.5257157384986273,
+    "cm": [
+      [
+        116,
+        1,
+        11
+      ],
+      [
+        2,
+        120,
+        64
+      ],
+      [
+        18,
+        33,
+        456
+      ]
+    ],
+    "recall": [
+      0.90625,
+      0.6451612903225806,
+      0.8994082840236687
+    ],
+    "false_skip_rate": 0.02886002886002886
+  },
+  "classes": [
+    "empty",
+    "simple",
+    "complex"
+  ],
+  "onnx": {
+    "onnx": "D:\\2-dinghuibianyuan\\data\\runs\\gate\\v4\\best.onnx",
+    "input": "images [1,3,160,160] float32",
+    "output": "output0 [1,3] raw logits",
+    "opset": 13,
+    "ort_max_abs_diff": 1.0728836059570312e-06
+  },
+  "next": "pscp 上板 -> ATC 转 gate_tiny.om -> gate-only 延迟测试 -> full/skip 复跑重算 M3/M6/经济性"
+}

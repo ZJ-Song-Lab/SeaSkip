@@ -1,0 +1,225 @@
+{
+  "dataset": "hrsid/test",
+  "n_patches": 7848,
+  "n_gt_empty": 1379,
+  "ap50": {
+    "full": 0.7522,
+    "skip": 0.7408,
+    "delta": 0.0114,
+    "n_dets": {
+      "full": 13935,
+      "skip": 13661
+    },
+    "n_matched": {
+      "full": 12154,
+      "skip": 11962
+    },
+    "note": "GT 框未裁剪至窗口, 跨窗目标 IoU 低估, 绝对值偏保守; full/skip 差值不受影响"
+  },
+  "argmax_policy": {
+    "skip_rate": 0.1922,
+    "skipped": 1508,
+    "true_skips": 1278,
+    "false_skips": 230,
+    "gt_ships_lost": 521,
+    "dets_lost": 257
+  },
+  "threshold_roc": [
+    {
+      "thr": 0.34,
+      "skip_rate": 0.2041,
+      "skipped": 1602,
+      "true_skips": 1295,
+      "false_skips": 307,
+      "gt_ships_lost": 1252,
+      "dets_lost": 693
+    },
+    {
+      "thr": 0.38,
+      "skip_rate": 0.1985,
+      "skipped": 1558,
+      "true_skips": 1288,
+      "false_skips": 270,
+      "gt_ships_lost": 975,
+      "dets_lost": 550
+    },
+    {
+      "thr": 0.4,
+      "skip_rate": 0.1962,
+      "skipped": 1540,
+      "true_skips": 1284,
+      "false_skips": 256,
+      "gt_ships_lost": 912,
+      "dets_lost": 515
+    },
+    {
+      "thr": 0.42,
+      "skip_rate": 0.1939,
+      "skipped": 1522,
+      "true_skips": 1282,
+      "false_skips": 240,
+      "gt_ships_lost": 820,
+      "dets_lost": 460
+    },
+    {
+      "thr": 0.44,
+      "skip_rate": 0.1915,
+      "skipped": 1503,
+      "true_skips": 1277,
+      "false_skips": 226,
+      "gt_ships_lost": 671,
+      "dets_lost": 354
+    },
+    {
+      "thr": 0.46,
+      "skip_rate": 0.1893,
+      "skipped": 1486,
+      "true_skips": 1275,
+      "false_skips": 211,
+      "gt_ships_lost": 559,
+      "dets_lost": 281
+    },
+    {
+      "thr": 0.48,
+      "skip_rate": 0.1862,
+      "skipped": 1461,
+      "true_skips": 1271,
+      "false_skips": 190,
+      "gt_ships_lost": 451,
+      "dets_lost": 212
+    },
+    {
+      "thr": 0.5,
+      "skip_rate": 0.1844,
+      "skipped": 1447,
+      "true_skips": 1264,
+      "false_skips": 183,
+      "gt_ships_lost": 442,
+      "dets_lost": 204
+    },
+    {
+      "thr": 0.6,
+      "skip_rate": 0.1753,
+      "skipped": 1376,
+      "true_skips": 1230,
+      "false_skips": 146,
+      "gt_ships_lost": 230,
+      "dets_lost": 68
+    },
+    {
+      "thr": 0.9,
+      "skip_rate": 0.0,
+      "skipped": 0,
+      "true_skips": 0,
+      "false_skips": 0,
+      "gt_ships_lost": 0,
+      "dets_lost": 0
+    }
+  ],
+  "zero_risk_point": {
+    "thr": 0.9,
+    "skip_rate": 0.0,
+    "skipped": 0,
+    "true_skips": 0,
+    "false_skips": 0,
+    "gt_ships_lost": 0,
+    "dets_lost": 0
+  },
+  "latency_mean_ms": {
+    "decode": 18.561,
+    "gprep": 1.792,
+    "prep": 3.146,
+    "gate": 0.612,
+    "det": 11.663,
+    "full_pipe": 35.774,
+    "baseline_no_gate": 33.37
+  },
+  "break_even_empty_ratio": 0.1623,
+  "sparsity_simulation": [
+    {
+      "target_ratio": 0.1757,
+      "note": "实测 test 流(无抽样)",
+      "n": 7848,
+      "skip_rate": 0.1922,
+      "full_ms": 35.774,
+      "seaskip_ms": 32.929,
+      "baseline_ms": 33.37,
+      "save_vs_full": 0.0795,
+      "save_vs_base": 0.0132,
+      "gt_ships_lost": 521
+    },
+    {
+      "target_ratio": 0.3,
+      "note": "全部 1379 空 patch + 3218 船 patch 抽样",
+      "n": 4597,
+      "skip_rate": 0.3035,
+      "full_ms": 35.74,
+      "seaskip_ms": 31.248,
+      "baseline_ms": 33.336,
+      "save_vs_full": 0.1257,
+      "save_vs_base": 0.0627,
+      "gt_ships_lost": 231
+    },
+    {
+      "target_ratio": 0.5,
+      "note": "全部 1379 空 patch + 1379 船 patch 抽样",
+      "n": 2758,
+      "skip_rate": 0.4772,
+      "full_ms": 35.754,
+      "seaskip_ms": 28.69,
+      "baseline_ms": 33.352,
+      "save_vs_full": 0.1976,
+      "save_vs_base": 0.1398,
+      "gt_ships_lost": 79
+    },
+    {
+      "target_ratio": 0.7,
+      "note": "全部 1379 空 patch + 591 船 patch 抽样",
+      "n": 1970,
+      "skip_rate": 0.6609,
+      "full_ms": 35.695,
+      "seaskip_ms": 25.91,
+      "baseline_ms": 33.287,
+      "save_vs_full": 0.2741,
+      "save_vs_base": 0.2216,
+      "gt_ships_lost": 50
+    },
+    {
+      "target_ratio": 0.8,
+      "note": "全部 1379 空 patch + 345 船 patch 抽样",
+      "n": 1724,
+      "skip_rate": 0.7459,
+      "full_ms": 35.671,
+      "seaskip_ms": 24.627,
+      "baseline_ms": 33.264,
+      "save_vs_full": 0.3096,
+      "save_vs_base": 0.2596,
+      "gt_ships_lost": 27
+    },
+    {
+      "target_ratio": 0.9,
+      "note": "全部 1379 空 patch + 153 船 patch 抽样",
+      "n": 1532,
+      "skip_rate": 0.8375,
+      "full_ms": 35.675,
+      "seaskip_ms": 23.277,
+      "baseline_ms": 33.267,
+      "save_vs_full": 0.3475,
+      "save_vs_base": 0.3003,
+      "gt_ships_lost": 14
+    },
+    {
+      "target_ratio": 0.95,
+      "note": "全部 1379 空 patch + 73 船 patch 抽样",
+      "n": 1452,
+      "skip_rate": 0.8836,
+      "full_ms": 35.673,
+      "seaskip_ms": 22.591,
+      "baseline_ms": 33.265,
+      "save_vs_full": 0.3667,
+      "save_vs_base": 0.3209,
+      "gt_ships_lost": 8
+    }
+  ],
+  "sim_note": "逐 patch 板端实测耗时与真实 gate 决策重放; 仅 empty/ship 分层混合为构造(种子抽样), 无任何合成测量"
+}

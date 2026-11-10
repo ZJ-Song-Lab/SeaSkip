@@ -1,0 +1,27 @@
+{
+  "arch": "TinyGate binary (empty/non-empty) 187074 params",
+  "train": {
+    "val_top1": 0.9634591961023142,
+    "empty_recall": 0.890625,
+    "false_skip_rate": 0.023088023088023088,
+    "epochs": 20,
+    "best_ep": 10,
+    "cm": [
+      [
+        114,
+        14
+      ],
+      [
+        16,
+        677
+      ]
+    ]
+  },
+  "onnx": {
+    "onnx": "d:\\2-dinghuibianyuan\\data\\runs\\gate\\v4bin\\best.onnx",
+    "input": "images [1,3,160,160] float32",
+    "output": "output0 [1,3] raw logits",
+    "opset": 13,
+    "ort_max_abs_diff": 8.940696716308594e-08
+  }
+}

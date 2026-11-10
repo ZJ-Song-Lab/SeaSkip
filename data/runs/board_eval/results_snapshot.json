@@ -1,0 +1,212 @@
+{
+  "snapshot_date": "2026-11-03",
+  "title": "SeaSkip 实验结果快照(M1-M6 全量 + 补强分析)",
+  "hardware": {
+    "board": "Atlas 200I DK A2 (Ascend310B4, CANN 23.0.rc3)",
+    "pc_gpu": "RTX (torch 2.5.1+cu121)"
+  },
+  "M1_gate_quality": {
+    "model": "yolo11n-cls v1 (runs/gate/v1)",
+    "val_top1": 0.8441,
+    "val_n": 821
+  },
+  "M2_detection_quality": {
+    "ssdd": {"pc_mAP50": 0.9912, "board_pc_parity": 0.9866},
+    "hrsid": {"pc_mAP50": 0.948},
+    "note": "板端 full 模式 patch 级 AP50=0.7522(见 skip_ap_roc), 与 PC 图像级 mAP 协议不同(GT 裁剪至窗口), 不可直接对比"
+  },
+  "M3_gate_skip_quality": {
+    "ssdd": {"gate_acc": 0.8498, "gt_empty": 0, "skip_rate": 0.0},
+    "hrsid": {
+      "gate_acc": 0.8891,
+      "confusion_gt_rows_pred_cols": [[1207, 23, 149], [13, 1330, 465], [55, 165, 4441]],
+      "skip_precision": 0.9467,
+      "true_skips": 1207, "false_skips": 68,
+      "empty_recall": 0.875, "simple_recall": 0.736, "complex_recall": 0.953
+    }
+  },
+  "M6_edge_latency": {
+    "ssdd": {"prep_ms": 21.928, "gate_ms": 8.919, "det_ms": 15.465,
+              "full_pipe_ms": 46.312, "skip_rate": 0.0, "saving": 0.0},
+    "hrsid": {"prep_ms": 24.849, "gate_ms": 9.08, "det_ms": 14.29,
+              "full_pipe_ms": 48.219, "skip_pipe_ms": 45.897,
+              "skip_rate": 0.1625, "saving_vs_full": 0.0481},
+    "methodology": "skip 流水线为反事实构造(full 各段均值 + det×实测执行率), 规避板上 CPU prep 段跨运行热漂移(24.9/39.6/69.2ms); skip 运行实测分段见 m3m6 报告 skip_run_ms",
+    "determinism": "full/skip 对执行过的 patch n_det 不一致数=0; 两次独立 skip 运行跳过决策完全一致(均 1275)"
+  },
+  "supplementary_analysis": {
+    "skip_end_to_end_AP50": {
+      "full": 0.7522, "skip": 0.7504, "delta": 0.0018,
+      "dets_lost": 47, "gt_matched_lost": 31,
+      "note": "误跳 68 patch(91 GT 船, 34 检出框)的 AP 代价仅 0.18 个点, 丢失检出多为低置信"
+    },
+    "gate_threshold_roc": {
+      "argmax_current": {"skip_rate": 0.1625, "false_skips": 68, "gt_ships_lost": 91},
+      "t046": {"skip_rate": 0.1316, "false_skips": 14},
+      "t048": {"skip_rate": 0.0921, "false_skips": 5},
+      "t050": {"skip_rate": 0.0004, "false_skips": 0},
+      "finding": "板上 p 值为双重 softmax(v1 ONNX 内含 Softmax 且 C++ 再做一次), 分布压缩, 阈值 0.48-0.5 之间有悬崖; 阈值保守化可将误跳从 68 降至 14(保留 81% 跳过率)"
+    },
+    "economics_vs_no_gate_baseline": {
+      "baseline_no_gate_ms": 39.14,
+      "break_even_skip_rate": 0.635,
+      "root_cause": "gate(9.08ms) 成本为 det(14.29ms) 的 64%, 盈亏平衡空占比过高",
+      "sparsity_simulation": [
+        {"empty_ratio": 0.1757, "skip_rate": 0.1625, "seaskip_ms": 45.90, "baseline_ms": 39.14, "save_vs_full": 0.0482, "save_vs_baseline": -0.1727},
+        {"empty_ratio": 0.30, "skip_rate": 0.2704, "seaskip_ms": 44.37, "baseline_ms": 39.16, "save_vs_full": 0.0802, "save_vs_baseline": -0.1330},
+        {"empty_ratio": 0.50, "skip_rate": 0.4402, "seaskip_ms": 41.77, "baseline_ms": 38.99, "save_vs_full": 0.1310, "save_vs_baseline": -0.0714},
+        {"empty_ratio": 0.70, "skip_rate": 0.6157, "seaskip_ms": 39.24, "baseline_ms": 38.96, "save_vs_full": 0.1833, "save_vs_baseline": -0.0071},
+        {"empty_ratio": 0.80, "skip_rate": 0.7013, "seaskip_ms": 37.98, "baseline_ms": 38.91, "save_vs_full": 0.2090, "save_vs_baseline": 0.0239},
+        {"empty_ratio": 0.90, "skip_rate": 0.7892, "seaskip_ms": 36.67, "baseline_ms": 38.87, "save_vs_full": 0.2354, "save_vs_baseline": 0.0568},
+        {"empty_ratio": 0.95, "skip_rate": 0.8326, "seaskip_ms": 36.08, "baseline_ms": 38.90, "save_vs_full": 0.2482, "save_vs_baseline": 0.0724}
+      ],
+      "sim_note": "逐 patch 板端实测耗时与真实 gate 决策重放; 仅 empty/ship 分层混合为构造(种子 42 抽样), 无合成测量"
+    }
+  },
+  "verdict_2026_11_03": {
+    "can_support_paper_now": false,
+    "reasons": [
+      "核心收益主张失败: 相对无 gate 基线, HRSID test 流上 SeaSkip 慢 17.3%, SSDD 慢 23.8%; 仅空占比>63.5% 才回本, 极端稀疏(95%)也只有 7.2%",
+      "根因: gate(yolo11n-cls, 9.08ms) 相对 det(14.29ms) 太贵",
+      "已补齐: skip 端到端 AP 代价(0.18 点)与阈值 ROC(安全性可辩护)"
+    ],
+    "optimization_decision": "训练轻量 gate(微 CNN, ~185k 参数, 输入 640 RGB/255, 输出 3 raw logits, 与 seaskip_eval.cpp 接口逐位对齐), 目标 gate 1-2ms, 盈亏平衡空占比降至 ~10%",
+    "next_steps": [
+      "train_tiny_gate.py 训练(数据: gate_train.txt 14677 / gate_val.txt 821)",
+      "导出 ONNX(raw logits, images 1x3x640x640) -> ATC -> gate_tiny.om",
+      "板端 full/skip 复跑(HRSID test + 稀疏混合确认流), 重算 M3/M6/经济性"
+    ]
+  },
+  "v2_iteration_2026_11_03": {
+    "gate": "TinyGate 微 CNN 187,587 参数 (v1 yolo11n-cls ~1.5M 的 1/8), 640x640 RGB/255 -> 3 raw logits (修复 v1 双重 softmax), runs/gate/v2",
+    "train": {"val_top1": 0.8453, "empty_recall": 0.9297, "false_skip_rate": 0.0332, "epochs": 20, "best_ep": 18},
+    "board_latency_ms": {"prep": 21.59, "gate": 5.16, "det": 14.04, "gate_v1": 9.08},
+    "M3_hrsid_test": {
+      "gate_acc": 0.8382,
+      "confusion_gt_rows_pred_cols": [[1281, 23, 75], [89, 1171, 548], [203, 332, 4126]],
+      "true_skips": 1281, "false_skips": 292, "empty_recall": 0.929,
+      "simple_recall": 0.648, "complex_recall": 0.885,
+      "skip_rate": 0.2005, "gt_ships_on_false_skips": 606, "dets_lost": 400
+    },
+    "M6_hrsid_test": {
+      "full_pipe_ms": 40.79, "skip_pipe_ms": 37.98, "saving_vs_full": 0.069,
+      "baseline_no_gate_ms": 35.63, "save_vs_baseline": -0.066,
+      "break_even_empty_ratio": 0.368, "gt_empty_ratio": 0.1757
+    },
+    "AP_hrsid_test": {
+      "full_ap50": 0.7522, "skip_ap50": 0.7331, "delta_ap50": -0.0191,
+      "dets_lost": 416, "matched_lost": 315,
+      "roc_note": "argmax false_skip=292; 阈值扫描至 t=0.9 无零误跳点 (t=0.9: skip 2.19%, false 3); 对比 v1 ΔAP50 仅 -0.0018",
+      "sparsity_replay": "空占比>=50% 才优于基线 (+4.6%); 30% 时仍 -2.2%",
+      "report": "runs/board_eval/v2/skip_ap_roc_hrsid_test.json"
+    },
+    "verdict": "v2 仍净亏 6.6%: gate 5.16ms 使盈亏平衡空占比 36.8% 仍远超 HRSID 实际 17.6%; 更大杠杆是 prep(21.6ms) 在跳过 patch 上也全额支付; 误跳 292 (v1 68) 需在 v3 用保守阈值治理",
+    "v3_decision": "① gate 输入降为 160x160 (C++ 4x4 box 下采样, 训练 PIL BOX 对齐, stem s2: 160->80->40->20->10->5) ② empty patch 跳过全尺寸 prep+det (decode 必付, 全尺寸 NCHW ~15ms 可跳) ③ 分段计时 decode/gprep/gate/prep/det",
+    "board_csvs": ["board/results_hrsid_tiny_gate.csv", "board/results_hrsid_tiny_full.csv", "board/results_hrsid_tiny_skip.csv"],
+    "artifacts": {"m3m6_report": "runs/board_eval/v2/m3m6_hrsid_test.json (v2; 默认路径 m3m6_hrsid_test.json 已于 20:36 恢复为 v1 主结果, 由收尾巡检重算)"}
+  },
+  "v3_iteration_2026_11_03": {
+    "gate": "TinyGate v3: 同 187,587 参数, 输入降为 160x160 (C++ 4x4 box 下采样=训练 PIL BOX 对齐), raw logits, runs/gate/v3",
+    "evaluator": "seaskip_eval_v3 (分段计时 decode/gprep/gate/prep/det; 跳过 patch 免全尺寸 prep+det)",
+    "M3_hrsid_test": {
+      "gate_acc": 0.8598,
+      "confusion_gt_rows_pred_cols": [[1251, 27, 101], [36, 1306, 466], [122, 348, 4191]],
+      "true_skips": 1251, "false_skips": 158,
+      "empty_recall": 0.907, "simple_recall": 0.722, "complex_recall": 0.899,
+      "skip_rate": 0.1795, "gt_ships_on_false_skips": 244, "dets_lost": 83
+    },
+    "M6_hrsid_test": {
+      "segmented_ms_full_run": {"decode": 29.09, "gprep": 5.17, "gate": 1.21, "prep": 3.44, "det": 14.18},
+      "full_pipe_ms": 53.10, "skip_pipe_ms_counterfactual": 49.95,
+      "baseline_no_gate_ms": 46.71,
+      "save_vs_full": 0.0593, "save_vs_baseline": -0.0692,
+      "break_even_skip_rate": 0.362,
+      "skip_run_own_ms": {"decode": 30.96, "gprep": 6.08, "gate": 0.93, "prep_ran": 3.98, "det": 14.37},
+      "gate_only_gate_ms": 0.66,
+      "drift_note": "v3 板端运行期间 root 的 ATC 任务持续占用 CPU (load ~17), decode 跨运行漂移 19.5~31ms; NPU 段稳定 (gate 0.66-1.21, det 14.0-14.4); 流水线对比采用 full 段均值+执行率反事实重放"
+    },
+    "AP_hrsid_test": {
+      "full_ap50": 0.7522, "skip_ap50": 0.7486, "delta_ap50": -0.0036,
+      "dets_lost": 90, "matched_lost": 61,
+      "roc_note": "raw logits 单次 softmax, p_empty 分布连续无 v1 双重 softmax 悬崖; argmax false_skip=158, t=0.5 时 128, t=0.6 时 98, 零误跳点 t=0.9 (skip 0.04%)",
+      "report": "runs/board_eval/v3/skip_ap_roc_hrsid_test.json"
+    },
+    "sparsity_replay": {
+      "17.57%实际流": -0.0692, "30%": -0.0345, "50%": 0.0495,
+      "70%": 0.1000, "80%": 0.1661, "90%": 0.2125, "95%": 0.2202
+    },
+    "determinism": "full/skip 两独立运行 gate_pred 与 p_empty 逐 patch 完全一致 (0 diffs), n_det 不一致 0",
+    "verdict": "gate 1.21ms 达标(v1 9.08 -> v2 5.16 -> v3 1.21); 但新增 gprep 5.17ms 使门控路径总开销 6.38ms, 盈亏平衡跳过率 36.2%(约空占比 40%)与 v2 持平; 关键改进是跳过时连全尺寸 prep 一起免(每跳省 17.6ms vs v1/v2 仅省 det 14ms), 高稀疏区间收益大幅提升: 90% 空省 21.3%, 95% 空省 22.0% (v1 同场景仅 7.2%); HRSID 实际流(17.6% 空)仍净亏 6.9%; 剩余瓶颈为 JPEG decode ~29ms 必付(占 full 流水线 55%), 属解码层, 超出本工作范围",
+    "board_csvs": ["board/results_v3_hrsid_gate.csv", "board/results_v3_hrsid_full.csv", "board/results_v3_hrsid_skip.csv"],
+    "artifacts": {"m3m6_report": "runs/board_eval/v3/m3m6_hrsid_test.json",
+                  "ap_roc_report": "runs/board_eval/v3/skip_ap_roc_hrsid_test.json"}
+  },
+  "v4_iteration_2026_11_04": {
+    "gate": "TinyGate v4: 同 187,587 参数, 输入 160x160 纯抽取式下采样 (numpy [0::4,0::4] <-> C++ 每输出像素单次读, gprep 16读->1读), runs/gate/v4",
+    "train": {"val_top1": 0.8429, "empty_recall": 0.8906, "false_skip_rate": 0.0289, "epochs": 20, "best_ep": 12},
+    "evaluator": "seaskip_eval_v4 (gprep 单读抽取, 其余同 v3 五段计时)",
+    "M3_hrsid_test": {
+      "gate_acc": 0.8396,
+      "confusion_gt_rows_pred_cols": [[1278, 16, 85], [62, 1075, 671], [168, 257, 4236]],
+      "true_skips": 1278, "false_skips": 230,
+      "empty_recall": 0.927, "simple_recall": 0.595, "complex_recall": 0.909,
+      "skip_rate": 0.1922, "gt_ships_on_false_skips": 521, "dets_lost": 274
+    },
+    "M6_hrsid_test": {
+      "segmented_ms_full_run": {"decode": 18.56, "gprep": 1.79, "gate": 0.61, "prep": 3.15, "det": 11.66},
+      "full_pipe_ms": 35.77, "skip_pipe_ms_counterfactual": 32.93,
+      "baseline_no_gate_ms": 33.37,
+      "save_vs_full": 0.0795, "save_vs_baseline": 0.0132,
+      "break_even_skip_rate": 0.162,
+      "skip_run_own_ms": {"decode": 29.60, "gprep": 1.79, "gate": 1.31, "prep_ran": 3.24, "det": 11.74},
+      "gate_only_run_ms": {"decode": 19.36, "gprep": 1.27, "gate": 0.62},
+      "drift_note": "首轮复跑被板上外部 root 进程 (rfdetr ATC 转换) 污染 (decode 69ms/det 28.5ms), 已作废备份为 *_load.bak; 外部进程结束后干净重跑; 干净条件下 decode 跨运行仍漂移 18.6~29.6ms (v3 同现象), NPU 段稳定 (gate 0.61-1.31, det 11.7); 流水线对比采用 full 段均值+执行率反事实重放"
+    },
+    "AP_hrsid_test": {
+      "full_ap50": 0.7522, "skip_ap50": 0.7408, "delta_ap50": -0.0114,
+      "dets_lost": 274, "matched_lost": 192,
+      "roc_note": "argmax false_skip=230 (抽取丢失 16x SNR 使误跳高于 v3 的 158); t=0.5 时 183, t=0.6 时 146 且 GT船损 230/检出损 68 均优于 v3 argmax (244/83), 跳过率保持 17.53%; 零误跳点 t=0.9 (skip 0.00%)",
+      "report": "runs/board_eval/v4/skip_ap_roc_hrsid_test.json"
+    },
+    "sparsity_replay": {
+      "17.57%实际流": 0.0132, "30%": 0.0627, "50%": 0.1398,
+      "70%": 0.2216, "80%": 0.2596, "90%": 0.3003, "95%": 0.3209
+    },
+    "verdict": "门控总开销 6.38->2.40ms (gprep 5.17->1.79 + gate 0.61), 盈亏平衡跳过率 36.2%->16.2%, 首次低于 HRSID 实际空占比 17.6%: 真实流首次净收益 +1.32% (净省 0.44ms/patch); 高稀疏收益继续放大 (90% 空 +30.0%, 95% +32.1%); 代价: ΔAP50 -1.14 点 (v3 -0.36), 误跳 230 (v3 158), 可用保守阈值 t=0.6 治理至优于 v3 argmax 水平",
+    "board_csvs": ["board/results_v4_hrsid_gate.csv", "board/results_v4_hrsid_full.csv", "board/results_v4_hrsid_skip.csv"],
+    "artifacts": {"m3m6_report": "runs/board_eval/v4/m3m6_hrsid_test.json",
+                  "ap_roc_report": "runs/board_eval/v4/skip_ap_roc_hrsid_test.json"}
+  },
+  "experiment_completion_2026_11_04": {
+    "status": "全部实验完成 (含 v4 优化迭代)",
+    "scope": "M1-M6 (v1) + 代价分析驱动的 v2/v3/v4 gate 优化迭代, PC/板端证据链完整",
+    "core_finding": "四轮迭代将门控开销 9.08 -> 2.40ms, 盈亏平衡空占比 63.5% -> 16.2%: v4 在真实 HRSID 流(17.6% 空)首次净收益 +1.32%, 稀疏流收益显著(50% 空 +14.0%, 90% +30.0%, 95% +32.1%); 精度代价 ΔAP50 -1.14 点(v1/v3 <= 0.36 点), 保守阈值 t=0.6 可将误跳治理至优于 v3 argmax 水平(146 vs 158)且跳过率仅降至 17.5%",
+    "iteration_history": [
+      {"ver": "v1", "gate_overhead_ms": 9.08, "break_even": 0.635, "save_vs_baseline_hrsid": -0.173, "delta_ap50": -0.0018},
+      {"ver": "v2", "gate_overhead_ms": 5.16, "break_even": 0.368, "save_vs_baseline_hrsid": -0.066, "delta_ap50": -0.0191},
+      {"ver": "v3", "gate_overhead_ms": 6.38, "break_even": 0.362, "save_vs_baseline_hrsid": -0.069, "delta_ap50": -0.0036},
+      {"ver": "v4", "gate_overhead_ms": 2.40, "break_even": 0.162, "save_vs_baseline_hrsid": 0.0132, "delta_ap50": -0.0114}
+    ],
+    "can_support_paper": true,
+    "paper_positioning": "SeaSkip 面向边缘端稀疏海域场景: 在 HRSID 真实流上已净正收益, 且收益随稀疏度单调放大; 门控成本工程优化路径(9.08->2.40ms, 3.8x)本身构成边缘系统贡献; 精度-速度-安全三方权衡有完整证据链(阈值 ROC + 稀疏度重放 + 确定性验证)",
+    "remaining_bottleneck": "JPEG decode 全额必付是上限约束(v4 干净条件下 18.6ms, 占 full 流水线 52%); 后续方向: ROI/缩略图解码、或 gate 与解码流水线重叠",
+    "optional_followups": ["v4 在 SSDD (0% 空) 上的纯开销占比验证(流级自适应直通设计依据)", "t=0.6 保守阈值变体的端到端 ΔAP50 实测(重放推断 <0.5 点)"]
+  },
+  "artifacts": {
+    "m3m6_reports": ["runs/board_eval/m3m6_hrsid_test.json", "runs/board_eval/m3m6_ssdd_test.json",
+                     "runs/board_eval/v2/skip_ap_roc_hrsid_test.json 相关 v2 报告见 v2 节",
+                     "runs/board_eval/v3/m3m6_hrsid_test.json",
+                     "runs/board_eval/v4/m3m6_hrsid_test.json"],
+    "supplementary": ["runs/board_eval/skip_ap_roc_hrsid_test.json",
+                      "runs/board_eval/v3/skip_ap_roc_hrsid_test.json",
+                      "runs/board_eval/v4/skip_ap_roc_hrsid_test.json"],
+    "board_csvs": ["board/results_hrsid_full.csv", "board/results_hrsid_skip.csv",
+                    "board/results_ssdd_full.csv", "board/results_ssdd_skip.csv",
+                    "board/results_hrsid_skip_auto.csv",
+                    "board/results_hrsid_tiny_gate.csv", "board/results_hrsid_tiny_full.csv", "board/results_hrsid_tiny_skip.csv",
+                    "board/results_v3_hrsid_gate.csv", "board/results_v3_hrsid_full.csv", "board/results_v3_hrsid_skip.csv",
+                    "board/results_v4_hrsid_gate.csv", "board/results_v4_hrsid_full.csv", "board/results_v4_hrsid_skip.csv"],
+    "evaluator_source": "board/seaskip_eval.cpp",
+    "analysis_scripts": ["eval_board_m3m6.py", "eval_skip_ap_roc.py"]
+  }
+}
