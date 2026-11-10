@@ -1,0 +1,29 @@
+# Local datasets, generated images, and model artifacts
+data/processed/
+data/gate/
+data/board/patches/
+data/board/patch_stream_*.json
+*.pt
+*.onnx
+*.om
+
+# Training and evaluation logs
+*.log
+__pycache__/
+*.pyc
+
+# Local credentials and editor/OS files
+*.pem
+*.key
+.env
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# LaTeX build products
+*.aux
+*.log
+*.out
+*.spl
+*.synctex.gz

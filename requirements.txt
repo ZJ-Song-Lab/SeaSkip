@@ -1,0 +1,5 @@
+numpy
+Pillow
+torch
+ultralytics==8.4.189
+onnx==1.23.2
